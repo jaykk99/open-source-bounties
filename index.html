@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Open Bounties — Get paid for open-source work</title>
+<meta name="description" content="A bounty board where open-source maintainers post bounties and contributors earn for merged work.">
+<style>
+  :root{
+    --bg:#0b0e14; --bg2:#11151f; --card:#151a26; --line:#232b3d;
+    --text:#e8ecf4; --muted:#8b94a7; --accent:#22c55e; --accent-d:#15803d;
+    --gold:#f5b301; --blue:#3b82f6; --purple:#8b5cf6; --red:#ef4444;
+    --radius:14px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.55}
+  a{color:var(--blue);text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+  header.top{position:sticky;top:0;z-index:50;background:rgba(11,14,20,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .nav{display:flex;align-items:center;gap:14px;padding:14px 0}
+  .logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.25rem}
+  .logo .coin{width:34px;height:34px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#ffe9a8,var(--gold) 60%,#b97d00);display:grid;place-items:center;color:#3a2b00;font-weight:900}
+  .nav .spacer{flex:1}
+  .btn{border:0;border-radius:10px;padding:10px 18px;font-weight:700;cursor:pointer;font-size:.95rem;transition:.15s}
+  .btn-primary{background:var(--accent);color:#04120a}
+  .btn-primary:hover{background:#4ade80}
+  .btn-ghost{background:transparent;border:1px solid var(--line);color:var(--text)}
+  .btn-ghost:hover{border-color:var(--accent)}
+  .btn-danger{background:transparent;border:1px solid var(--red);color:var(--red)}
+  .btn-sm{padding:7px 12px;font-size:.85rem}
+  .btn[disabled]{opacity:.5;cursor:not-allowed}
+  .hero{padding:44px 0 26px;text-align:center}
+  .hero h1{font-size:clamp(1.8rem,4.5vw,3rem);letter-spacing:-.02em}
+  .hero h1 .g{color:var(--accent)}
+  .hero p{color:var(--muted);max-width:620px;margin:10px auto 0}
+  .stats{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:22px 0 8px}
+  .stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:12px 22px;min-width:150px}
+  .stat b{display:block;font-size:1.5rem;color:var(--gold)}
+  .stat span{color:var(--muted);font-size:.82rem}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:18px 0}
+  .toolbar input[type=search]{flex:1;min-width:180px;background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 14px;font-size:.95rem}
+  .toolbar select{background:var(--bg2);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px 12px;font-size:.9rem}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;padding-bottom:40px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;display:flex;flex-direction:column;gap:10px;transition:.15s}
+  .card:hover{border-color:#3a4660;transform:translateY(-2px)}
+  .card .title{font-weight:700;font-size:1.08rem}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;align-items:center;font-size:.82rem;color:var(--muted)}
+  .badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:.75rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+  .b-open{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.4)}
+  .b-claimed{background:rgba(59,130,246,.15);color:#93c5fd;border:1px solid rgba(59,130,246,.4)}
+  .b-review{background:rgba(139,92,246,.15);color:#c4b5fd;border:1px solid rgba(139,92,246,.4)}
+  .b-done{background:rgba(245,179,1,.15);color:var(--gold);border:1px solid rgba(245,179,1,.4)}
+  .b-paid{background:rgba(34,197,94,.2);color:#4ade80;border:1px solid var(--accent)}
+  .amount{font-weight:800;color:var(--gold);font-size:1.15rem}
+  .card .desc{color:var(--muted);font-size:.92rem;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+  .card .actions{margin-top:auto;display:flex;gap:8px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--muted);padding:60px 20px;grid-column:1/-1}
+  /* Modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:100;padding:16px}
+  .overlay.open{display:grid}
+  .modal{background:var(--bg2);border:1px solid var(--line);border-radius:18px;max-width:560px;width:100%;max-height:92vh;overflow:auto;padding:26px}
+  .modal h2{margin-bottom:4px}
+  .modal p.sub{color:var(--muted);font-size:.9rem;margin-bottom:16px}
+  .field{margin-bottom:14px}
+  .field label{display:block;font-weight:600;font-size:.88rem;margin-bottom:6px}
+  .field input,.field textarea,.field select{width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);border-radius:10px;padding:11px 13px;font-size:.95rem;font-family:inherit}
+  .field textarea{min-height:110px;resize:vertical}
+  .field .hint{font-size:.78rem;color:var(--muted);margin-top:4px}
+  .modal .row{display:flex;gap:10px;justify-content:flex-end;margin-top:18px;flex-wrap:wrap}
+  /* Detail */
+  .detail-hero{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:24px;margin:20px 0}
+  .detail-hero h1{font-size:1.6rem;margin:8px 0}
+  .timeline{margin:10px 0 0;list-style:none}
+  .timeline li{padding:10px 0;border-top:1px dashed var(--line);font-size:.92rem}
+  .timeline li .t{color:var(--muted);font-size:.78rem}
+  .note{background:rgba(245,179,1,.08);border:1px solid rgba(245,179,1,.35);border-radius:10px;padding:12px 14px;font-size:.88rem;color:#fbd97a;margin:14px 0}
+  footer{border-top:1px solid var(--line);padding:26px 0 40px;color:var(--muted);font-size:.85rem;text-align:center}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(20px);background:#1a2130;border:1px solid var(--accent);color:var(--text);padding:12px 20px;border-radius:12px;opacity:0;transition:.25s;z-index:200;font-size:.92rem;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  @media(max-width:560px){.nav{flex-wrap:wrap}.hero{padding:30px 0 18px}.stat{min-width:calc(50% - 7px);padding:10px 12px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap nav">
+    <div class="logo"><span class="coin">$</span><span>Open Bounties</span></div>
+    <div class="spacer"></div>
+    <button class="btn btn-ghost btn-sm" id="navHome" style="display:none">← All bounties</button>
+    <button class="btn btn-primary" id="navPost">+ Post a bounty</button>
+  </div>
+</header>
+
+<main class="wrap" id="viewHome">
+  <section class="hero">
+    <h1>Get <span class="g">paid</span> for fixing open source.</h1>
+    <p>Maintainers post bounties on real issues and features. Contributors claim them, ship the work, and earn. Payouts are settled by the bounty owner — this board tracks everything publicly.</p>
+  </section>
+  <section class="stats" id="stats"></section>
+  <div class="toolbar">
+    <input type="search" id="q" placeholder="Search bounties… (title, repo, description)">
+    <select id="fStatus">
+      <option value="all">All statuses</option>
+      <option value="open">Open</option>
+      <option value="claimed">Claimed</option>
+      <option value="in_review">In review</option>
+      <option value="completed">Completed</option>
+      <option value="paid">Paid out</option>
+    </select>
+    <select id="fSort">
+      <option value="new">Newest first</option>
+      <option value="amount">Highest amount</option>
+    </select>
+  </div>
+  <section class="grid" id="grid"></section>
+</main>
+
+<main class="wrap" id="viewDetail" style="display:none">
+  <div class="detail-hero" id="detailHero"></div>
+  <div id="detailActions" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:30px"></div>
+  <h3 style="margin-bottom:6px">Activity</h3>
+  <ul class="timeline" id="timeline"></ul>
+  <div class="note">⚠️ <b>Payouts are internal accounting only.</b> This board never moves real money. When work is marked complete, the payout is flagged <b>“pending owner approval”</b> and the bounty poster settles it off-platform.</div>
+</main>
+
+<div class="overlay" id="overlay"><div class="modal" id="modal"></div></div>
+<div class="toast" id="toast"></div>
+
+<footer class="wrap">
+  Open Bounties · v1 keyless build — data lives in your browser (localStorage). Export your data anytime from a bounty detail page.
+</footer>
+
+<script>
+"use strict";
+const KEY = "openbounties.v1";
+const STATUS_LABEL = {open:"Open",claimed:"Claimed",in_review:"In review",completed:"Completed",paid:"Paid out"};
+const STATUS_CLASS = {open:"b-open",claimed:"b-claimed",in_review:"b-review",completed:"b-done",paid:"b-paid"};
+
+function seed(){
+  const now = Date.now(), D = 864e5;
+  return [
+    {id:"b1",title:"Fix broken table sorting on mobile",repo:"https://github.com/example/grid-ui",repoName:"example/grid-ui",amount:120,
+     description:"Sorting headers overlap on viewports under 480px. Repro: open the demo page, resize to 400px, tap any column header. Fix must include a regression test.",status:"open",
+     createdAt:now-2*D,claimedBy:null,submissions:[],events:[{t:now-2*D,text:"Bounty posted"}]},
+    {id:"b2",title:"Add dark-mode toggle with system preference",repo:"https://github.com/example/docs-site",repoName:"example/docs-site",amount:250,
+     description:"Docs site is light-only. Add a toggle persisted to localStorage that defaults to prefers-color-scheme. Should cover all pages and the search modal.",status:"claimed",
+     createdAt:now-5*D,claimedBy:"juniper-dev",submissions:[],events:[{t:now-5*D,text:"Bounty posted"},{t:now-3*D,text:"Claimed by juniper-dev"}]},
+    {id:"b3",title:"Write integration tests for the checkout webhook",repo:"https://github.com/example/shop-core",repoName:"example/shop-core",amount:400,
+     description:"The /webhook/checkout endpoint has zero coverage. Add tests for success, signature mismatch, duplicate delivery, and malformed payloads using the existing test harness.",status:"in_review",
+     createdAt:now-9*D,claimedBy:"kay-oss",submissions:[{by:"kay-oss",url:"https://github.com/example/shop-core/pull/42",t:now-1*D}],
+     events:[{t:now-9*D,text:"Bounty posted"},{t:now-7*D,text:"Claimed by kay-oss"},{t:now-1*D,text:"Work submitted: example/shop-core#42"}]},
+    {id:"b4",title:"Translate README to Spanish",repo:"https://github.com/example/cli-tool",repoName:"example/cli-tool",amount:75,
+     description:"README.md is English-only and gets traffic from LATAM. Provide a full, accurate README.es.md translation; machine translation without review will be rejected.",status:"completed",
+     createdAt:now-14*D,claimedBy:"maria-codes",submissions:[{by:"maria-codes",url:"https://github.com/example/cli-tool/pull/9",t:now-6*D}],
+     events:[{t:now-14*D,text:"Bounty posted"},{t:now-12*D,text:"Claimed by maria-codes"},{t:now-6*D,text:"Work submitted: example/cli-tool#9"},{t:now-4*D,text:"Marked complete — payout pending owner approval"}]}
+  ];
+}
+
+function load(){
+  try{
+    const raw = localStorage.getItem(KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  const s = seed();
+  save(s);
+  return s;
+}
+function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+let DB = load();
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s??"").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt$ = n => "$" + Number(n).toLocaleString("en-US");
+const fmtT = t => new Date(t).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+const repoOf = url => { try{ return new URL(url).pathname.replace(/^\//,"").replace(/\/$/,""); }catch(e){ return url; } };
+
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(t._h); t._h=setTimeout(()=>t.classList.remove("show"),2600); }
+
+function find(id){ return DB.find(b=>b.id===id); }
+function persist(){ save(DB); renderStats(); }
+
+/* ---------- list view ---------- */
+function renderStats(){
+  const open = DB.filter(b=>b.status==="open").length;
+  const total = DB.reduce((s,b)=>s+Number(b.amount||0),0);
+  $("#stats").innerHTML =
+    `<div class="stat"><b>${open}</b><span>open bounties</span></div>`+
+    `<div class="stat"><b>${fmt$(total)}</b><span>total posted</span></div>`+
+    `<div class="stat"><b>${DB.length}</b><span>bounties all-time</span></div>`;
+}
+function renderGrid(){
+  const q = $("#q").value.trim().toLowerCase();
+  const st = $("#fStatus").value, sort = $("#fSort").value;
+  let list = DB.filter(b =>
+    (st==="all" || b.status===st) &&
+    (!q || (b.title+" "+b.repoName+" "+b.description).toLowerCase().includes(q))
+  );
+  list.sort((a,b)=> sort==="amount" ? b.amount-a.amount : b.createdAt-a.createdAt);
+  const g = $("#grid");
+  if(!list.length){ g.innerHTML = `<div class="empty"><h3>No bounties found</h3><p>Try a different search, or post the first one.</p></div>`; return; }
+  g.innerHTML = list.map(b=>`
+    <article class="card">
+      <div class="meta"><span class="badge ${STATUS_CLASS[b.status]}">${STATUS_LABEL[b.status]}</span><span class="amount">${fmt$(b.amount)}</span></div>
+      <div class="title">${esc(b.title)}</div>
+      <div class="meta">📦 <a href="${esc(b.repo)}" target="_blank" rel="noopener">${esc(b.repoName)}</a></div>
+      <div class="desc">${esc(b.description)}</div>
+      <div class="actions">
+        <button class="btn btn-ghost btn-sm" data-open="${b.id}">View details</button>
+        ${b.status==="open" ? `<button class="btn btn-primary btn-sm" data-claim="${b.id}">Claim</button>` : ""}
+      </div>
+    </article>`).join("");
+}
+function showHome(){
+  $("#viewDetail").style.display="none"; $("#viewHome").style.display="block";
+  $("#navHome").style.display="none";
+  renderStats(); renderGrid();
+}
+
+/* ---------- detail view ---------- */
+let currentId = null;
+function showDetail(id){
+  const b = find(id); if(!b) return showHome();
+  currentId = id;
+  $("#viewHome").style.display="none"; $("#viewDetail").style.display="block";
+  $("#navHome").style.display="inline-block";
+  const payoutLine = (b.status==="completed")
+    ? `<div class="note" style="margin:12px 0 0">💰 <b>Payout status:</b> pending owner approval — the bounty poster settles ${fmt$(b.amount)} to ${esc(b.claimedBy)} off-platform.</div>`
+    : (b.status==="paid")
+    ? `<div class="note" style="margin:12px 0 0;border-color:rgba(34,197,94,.5);background:rgba(34,197,94,.08);color:#86efac">✅ <b>Paid out:</b> owner confirmed payment of ${fmt$(b.amount)} to ${esc(b.claimedBy)}.</div>` : "";
+  $("#detailHero").innerHTML = `
+    <div class="meta"><span class="badge ${STATUS_CLASS[b.status]}">${STATUS_LABEL[b.status]}</span><span class="amount">${fmt$(b.amount)}</span><span>posted ${fmtT(b.createdAt)}</span></div>
+    <h1>${esc(b.title)}</h1>
+    <div class="meta">📦 <a href="${esc(b.repo)}" target="_blank" rel="noopener">${esc(b.repoName)}</a>${b.claimedBy?` · 👤 claimed by <b>${esc(b.claimedBy)}</b>`:""}</div>
+    <p style="margin-top:12px;white-space:pre-wrap">${esc(b.description)}</p>
+    ${b.submissions.length ? `<h3 style="margin:14px 0 6px">Submissions</h3>`+b.submissions.map(s=>`<div style="font-size:.92rem;margin-bottom:6px">🔗 <a href="${esc(s.url)}" target="_blank" rel="noopener">${esc(s.url)}</a> <span class="meta">— by ${esc(s.by)}, ${fmtT(s.t)}</span></div>`).join("") : ""}
+    ${payoutLine}`;
+  const A = $("#detailActions"); let h = "";
+  if(b.status==="open") h += `<button class="btn btn-primary" id="aClaim">Claim this bounty</button>`;
+  if(b.status==="claimed") h += `<button class="btn btn-primary" id="aSubmit">Submit work</button><button class="btn btn-ghost" id="aUnclaim">Release claim</button>`;
+  if(b.status==="in_review") h += `<button class="btn btn-primary" id="aComplete">Mark complete</button><button class="btn btn-ghost" id="aBack">Send back to claimed</button>`;
+  if(b.status==="completed") h += `<button class="btn btn-primary" id="aPaid">Confirm payout sent</button>`;
+  h += `<button class="btn btn-ghost" id="aExport">Export data (JSON)</button>`;
+  A.innerHTML = h;
+  wireDetail(b);
+  $("#timeline").innerHTML = [...b.events].reverse().map(e=>`<li>${esc(e.text)}<div class="t">${fmtT(e.t)}</div></li>`).join("");
+}
+function addEvent(b,text){ b.events.push({t:Date.now(),text}); }
+function wireDetail(b){
+  const on = (id,fn)=>{ const el=$(id); if(el) el.onclick=fn; };
+  on("#aClaim",()=>promptClaim(b));
+  on("#aSubmit",()=>promptSubmit(b));
+  on("#aUnclaim",()=>{ b.status="open"; b.claimedBy=null; addEvent(b,"Claim released — bounty reopened"); persist(); showDetail(b.id); toast("Claim released."); });
+  on("#aBack",()=>{ b.status="claimed"; addEvent(b,"Sent back for more work"); persist(); showDetail(b.id); });
+  on("#aComplete",()=>{ b.status="completed"; addEvent(b,`Marked complete — payout pending owner approval (${fmt$(b.amount)} to ${b.claimedBy})`); persist(); showDetail(b.id); toast("Marked complete. Payout pending owner approval."); });
+  on("#aPaid",()=>{ b.status="paid"; addEvent(b,`Owner confirmed payout of ${fmt$(b.amount)} to ${b.claimedBy}`); persist(); showDetail(b.id); toast("Payout confirmed."); });
+  on("#aExport",()=>{ const blob=new Blob([JSON.stringify(DB,null,2)],{type:"application/json"}); const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download="open-bounties-export.json"; a.click(); URL.revokeObjectURL(a.href); });
+}
+
+/* ---------- modals ---------- */
+function openModal(html){ $("#modal").innerHTML=html; $("#overlay").classList.add("open"); }
+function closeModal(){ $("#overlay").classList.remove("open"); }
+$("#overlay").addEventListener("click",e=>{ if(e.target.id==="overlay") closeModal(); });
+
+function postForm(){
+  openModal(`
+    <h2>Post a bounty</h2><p class="sub">Describe the work, link the repo, set the amount.</p>
+    <div class="field"><label>Title</label><input id="mTitle" placeholder="e.g. Fix login redirect loop on Safari"></div>
+    <div class="field"><label>Repository URL</label><input id="mRepo" placeholder="https://github.com/owner/repo"></div>
+    <div class="field"><label>Amount (USD)</label><input id="mAmt" type="number" min="1" step="1" placeholder="150"></div>
+    <div class="field"><label>Description / acceptance criteria</label><textarea id="mDesc" placeholder="What needs doing, how to reproduce, what 'done' looks like…"></textarea>
+      <div class="hint">Be specific — clear criteria get claimed faster.</div></div>
+    <div class="row"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-primary" id="mSave">Post bounty</button></div>`);
+  $("#mCancel").onclick=closeModal;
+  $("#mSave").onclick=()=>{
+    const title=$("#mTitle").value.trim(), repo=$("#mRepo").value.trim(),
+          amt=parseFloat($("#mAmt").value), desc=$("#mDesc").value.trim();
+    if(!title||!repo||!desc){ toast("Fill in title, repo URL, and description."); return; }
+    if(!(amt>0)){ toast("Amount must be greater than 0."); return; }
+    const b={id:"b"+Date.now().toString(36),title,repo,repoName:repoOf(repo),amount:Math.round(amt),
+      description:desc,status:"open",createdAt:Date.now(),claimedBy:null,submissions:[],events:[{t:Date.now(),text:"Bounty posted"}]};
+    DB.unshift(b); persist(); closeModal(); showHome(); toast("Bounty posted.");
+  };
+}
+function promptClaim(b){
+  openModal(`
+    <h2>Claim this bounty</h2><p class="sub">You're committing to deliver <b>${esc(b.title)}</b> for <b>${fmt$(b.amount)}</b>.</p>
+    <div class="field"><label>Your handle / name</label><input id="mWho" placeholder="e.g. octocat"></div>
+    <div class="row"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-primary" id="mSave">Claim bounty</button></div>`);
+  $("#mCancel").onclick=closeModal;
+  $("#mSave").onclick=()=>{
+    const who=$("#mWho").value.trim();
+    if(!who){ toast("Enter your handle."); return; }
+    b.status="claimed"; b.claimedBy=who; addEvent(b,`Claimed by ${who}`); persist(); closeModal(); showDetail(b.id); toast("Bounty claimed. Good luck!");
+  };
+}
+function promptSubmit(b){
+  openModal(`
+    <h2>Submit your work</h2><p class="sub">Link the PR, commit, or branch that resolves <b>${esc(b.title)}</b>.</p>
+    <div class="field"><label>Work link (PR / commit URL)</label><input id="mUrl" placeholder="https://github.com/owner/repo/pull/123"></div>
+    <div class="field"><label>Notes (optional)</label><textarea id="mNotes" style="min-height:70px" placeholder="What you changed, how to test…"></textarea></div>
+    <div class="row"><button class="btn btn-ghost" id="mCancel">Cancel</button><button class="btn btn-primary" id="mSave">Submit for review</button></div>`);
+  $("#mCancel").onclick=closeModal;
+  $("#mSave").onclick=()=>{
+    const url=$("#mUrl").value.trim(), notes=$("#mNotes").value.trim();
+    if(!url){ toast("Paste your work link."); return; }
+    b.submissions.push({by:b.claimedBy,url,notes,t:Date.now()});
+    b.status="in_review"; addEvent(b,`Work submitted by ${b.claimedBy}: ${repoOf(url)}`+(notes?` — ${notes}`:""));
+    persist(); closeModal(); showDetail(b.id); toast("Submitted for review.");
+  };
+}
+
+/* ---------- wiring ---------- */
+$("#navPost").onclick=postForm;
+$("#navHome").onclick=showHome;
+$("#q").addEventListener("input",renderGrid);
+$("#fStatus").addEventListener("change",renderGrid);
+$("#fSort").addEventListener("change",renderGrid);
+$("#grid").addEventListener("click",e=>{
+  const o=e.target.closest("[data-open]"), c=e.target.closest("[data-claim]");
+  if(c){ const b=find(c.dataset.claim); if(b&&b.status==="open"){ currentId=b.id; showDetail(b.id); promptClaim(b);} return; }
+  if(o){ showDetail(o.dataset.open); }
+});
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") closeModal(); });
+
+showHome();
+</script>
+</body>
+</html>
