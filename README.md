@@ -4,7 +4,7 @@
 
 A live bounty board web app: maintainers post bounties on real issues and features, contributors claim them, submit work, and get tracked to payout. Keyless v1 — all data persists in the browser via localStorage, no API keys or backend required.
 
-**Live:** not deployed yet — open `index.html` in a browser, or host it as a static site.
+**Live:** https://jaykk99.github.io/open-source-bounties/ (GitHub Pages, auto-deploys from `main`)
 
 ## Features
 
