@@ -1,3 +1,5 @@
+Live: https://jaykk99.github.io/open-source-bounties/
+
 # Open Bounties
 
 **Monetize open-source contributions via direct payments and bounties.**
